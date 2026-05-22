@@ -21,6 +21,7 @@ export const defaultContentPageLayout: PageLayout = {
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
+    Component.DesktopOnly(Component.RightSideToggle()),
     Component.Explorer({
       title: "Contents",
       folderClickBehavior: "toggle",
@@ -41,6 +42,7 @@ export const defaultListPageLayout: PageLayout = {
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
     Component.Darkmode(),
+    Component.DesktopOnly(Component.RightSideToggle()),
     Component.Explorer({ 
       title: "Contents",
       folderClickBehavior: "toggle",
