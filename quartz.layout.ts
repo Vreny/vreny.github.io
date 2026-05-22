@@ -13,9 +13,13 @@ export const sharedPageComponents: SharedLayout = {
 export const defaultContentPageLayout: PageLayout = {
   beforeBody: [
     Component.ArticleTitle(),
+    Component.ContentMeta(),
+    Component.TagList(),
   ],
   left: [
     Component.PageTitle(),
+    Component.MobileOnly(Component.Spacer()),
+    Component.Search(),
     Component.Darkmode(),
     Component.Explorer({
       title: "Contents",
@@ -23,15 +27,25 @@ export const defaultContentPageLayout: PageLayout = {
       filterFn: (node) => node.name !== "tags",
     }),
   ],
-  right: [],
+  right: [
+    Component.Graph(),
+    Component.TableOfContents(),
+    Component.Backlinks(),
+  ],
 }
 
 export const defaultListPageLayout: PageLayout = {
-  beforeBody: [Component.ArticleTitle()],
+  beforeBody: [Component.ArticleTitle(), Component.ContentMeta()],
   left: [
     Component.PageTitle(),
+    Component.MobileOnly(Component.Spacer()),
+    Component.Search(),
     Component.Darkmode(),
-    Component.Explorer({ title: "Contents" }),
+    Component.Explorer({ 
+      title: "Contents",
+      folderClickBehavior: "toggle",
+      filterFn: (node) => node.name !== "tags",
+    }),
   ],
   right: [],
 }
