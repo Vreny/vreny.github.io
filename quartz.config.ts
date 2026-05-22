@@ -29,20 +29,20 @@ const config: QuartzConfig = {
           gray: "#b8b8b8",
           darkgray: "#4e4e4e",
           dark: "#2b2b2b",
-          secondary: "#284b63",
-          tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
+          secondary: "#6e40aa",
+          tertiary: "#a271eb",
+          highlight: "rgba(110, 64, 170, 0.15)",
           textHighlight: "#fff23688",
         },
         darkMode: {
-          light: "#161618",
-          lightgray: "#393639",
+          light: "#000000",     // Чисто черный фон, как ты хотел
+          lightgray: "#1a1a1a", // Цвет границ и линий
           gray: "#646464",
           darkgray: "#d4d4d4",
           dark: "#ebebec",
-          secondary: "#7b97aa",
-          tertiary: "#84a59d",
-          highlight: "rgba(143, 159, 169, 0.15)",
+          secondary: "#a271eb", // Насыщенный фиолетовый вместо синего
+          tertiary: "#ca9bf7",  // Светло-фиолетовый для ховеров
+          highlight: "rgba(162, 113, 235, 0.15)",
           textHighlight: "#b3aa0288",
         },
       },
