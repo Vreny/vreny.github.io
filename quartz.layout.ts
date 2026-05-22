@@ -20,6 +20,7 @@ export const defaultContentPageLayout: PageLayout = {
     Component.Explorer({
       title: "Contents",
       folderClickBehavior: "toggle",
+      filterFn: (node) => node.name !== "tags",
     }),
   ],
   right: [],
