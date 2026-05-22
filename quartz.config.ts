@@ -35,13 +35,13 @@ const config: QuartzConfig = {
           textHighlight: "#fff23688",
         },
         darkMode: {
-          light: "#000000",     // Чисто черный фон, как ты хотел
-          lightgray: "#1a1a1a", // Цвет границ и линий
+          light: "#212121",
+          lightgray: "#2d2d2d",
           gray: "#646464",
           darkgray: "#d4d4d4",
           dark: "#ebebec",
-          secondary: "#a271eb", // Насыщенный фиолетовый вместо синего
-          tertiary: "#ca9bf7",  // Светло-фиолетовый для ховеров
+          secondary: "#a271eb",
+          tertiary: "#ca9bf7",
           highlight: "rgba(162, 113, 235, 0.15)",
           textHighlight: "#b3aa0288",
         },
