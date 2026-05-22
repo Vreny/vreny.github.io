@@ -18,7 +18,7 @@ export const defaultContentPageLayout: PageLayout = {
     Component.PageTitle(),
     Component.Darkmode(),
     Component.Explorer({
-      title: "Заметки",
+      title: "Contents",
       folderClickBehavior: "toggle",
     }),
   ],
@@ -30,7 +30,7 @@ export const defaultListPageLayout: PageLayout = {
   left: [
     Component.PageTitle(),
     Component.Darkmode(),
-    Component.Explorer({ title: "Заметки" }),
+    Component.Explorer({ title: "Contents" }),
   ],
   right: [],
 }
