@@ -20,7 +20,7 @@ export const defaultContentPageLayout: PageLayout = {
     Component.PageTitle(),
     Component.MobileOnly(Component.Spacer()),
     Component.Search(),
-    Component.Darkmode(),
+    Component.Darkmode(), // В зависимости от версии Quartz, кнопка сворачивания идет в комплекте или управляется через стили
     Component.Explorer({
       title: "Contents",
       folderClickBehavior: "toggle",
@@ -28,11 +28,13 @@ export const defaultContentPageLayout: PageLayout = {
     }),
   ],
   right: [
-    Component.DesktopOnly(Component.TableOfContents()),
+    Component.Graph(),
+    Component.TableOfContents(),
     Component.Backlinks(),
   ],
 }
 
+// Копируем правую панель и для списков, чтобы граф и бэклинки не пропадали там
 export const defaultListPageLayout: PageLayout = {
   beforeBody: [Component.ArticleTitle(), Component.ContentMeta()],
   left: [
@@ -47,6 +49,7 @@ export const defaultListPageLayout: PageLayout = {
     }),
   ],
   right: [
+    Component.Graph(),
     Component.Backlinks(),
   ],
 }
