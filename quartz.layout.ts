@@ -47,5 +47,8 @@ export const defaultListPageLayout: PageLayout = {
       filterFn: (node) => node.name !== "tags",
     }),
   ],
-  right: [],
+  right: [
+    Component.Graph(),
+    Component.Backlinks(),
+  ],
 }
