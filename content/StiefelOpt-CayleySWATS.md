@@ -352,23 +352,7 @@ $$\begin{equation}\text{Рис. 11 SWATS на } H(x,y)\text{ и } R(x,y), \text{
 5. $$\begin{equation}X_{k+1} \leftarrow R_{X_k}(\overline{X_{k+1}}) \tag{37} \end{equation}$$
 6. Повторяем итерации до того момента, пока не сработает критерий остановки, например,  $$\begin{equation}\text{DO }2-5 \text{ WHILE } ||X_{k+1}-X_k||_F\geq\varepsilon.\tag{38} \end{equation}$$
 Формально общая схема римановой оптимизации имеет вид:
-```pseudo
-\begin{algorithm}
-\caption{1.Общий алгоритм римановой оптимизации}
-\begin{algorithmic}
-\INPUT $X_0 \in \mathcal{M}, \varepsilon > 0$
-\STATE $k \leftarrow 0$
-\WHILE{$X_k$ not converged}
-	\STATE compute $\nabla Q(X_k)$
-	\STATE ${\nabla Q(X_k)}_{tan}=\nabla Q(X_k)-\nabla Q(X_k)_{ort}$
-    \STATE $\overline{X_{k+1}}\leftarrow X_k-p_k(riGradQ(X_k))$
-    \STATE $X_{k+1} \leftarrow R_{X_k}(\overline{X_{k+1}})$
-    \STATE $k \leftarrow k + 1$
-\ENDWHILE
-\OUTPUT $X_k$
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a1.png)
 ## 6. Оптимизация на многообразии Штифеля
 
 Теперь хотелось бы сделать следующее: реализовать общий алгоритм на примере конкретного оптимизатора и ретракции для $St(m,n)$, выявить некоторые имеющиеся проблемы и идентифицировать компоненты, вычисления для которых можно выполнять эффективнее. Итак, реализация RiADAM на $St(m,n)$:
@@ -379,43 +363,7 @@ $$\begin{equation}\text{Рис. 11 SWATS на } H(x,y)\text{ и } R(x,y), \text{
 	5.  $$\begin{equation}\overline{X_{k+1}}=QR \tag{49} \end{equation}$$$$\begin{equation} X_{k+1} = \operatorname{qf}(\overline{X_{k+1}})=Q \tag{50} \end{equation}$$
 	6.  $$\begin{equation}\text{DO }2-5 \text{ WHILE } ||X_{k+1}-X_k||_F\geq\varepsilon \tag{51} \end{equation}$$
 Таким образом:
-```pseudo
-\begin{algorithm}
-\caption{2.RiADAM-QR}
-\begin{algorithmic}
-\INPUT $X_0 \in St(m,n), \ \alpha>0, \ \beta_1,\beta_2 \in (0,1), \ \varepsilon>0$
-\STATE $m_0 \leftarrow 0$
-\STATE $v_0 \leftarrow 0$
-\STATE $k \leftarrow 0$
-
-\WHILE{$X_k$ not converged}
-
-    \STATE compute $\nabla Q(X_k)$
-
-    \STATE $riGradQ(X_k) \leftarrow \nabla Q(X_k) - 
-    X_k\frac{X_k^T \nabla Q(X_k) + (\nabla Q(X_k))^T X_k}{2}$
-
-    \STATE $m_k \leftarrow \beta_1 m_{k-1} + (1-\beta_1)\,riGradQ(X_k)$
-    \STATE $ \tilde{m}_{k-1} \leftarrow {m}_{k-1}-X_k\frac{{X_k}^t{m}_{k-1}+{m^t_{k-1}}X_k}{2}$
-    
-    \STATE $v_k \leftarrow \beta_2 v_{k-1} + (1-\beta_2)\,(riGradQ(X_k)\odot riGradQ(X_k))$
-    \STATE $ \tilde{v}_{k-1}={v}_{k-1}-X_k\frac{{X_k}^t{v}_{k-1}+{v^t_{k-1}}X_k}{2}$
-
-    \STATE ${\eta}_k = \left( \frac{\frac{m_k}{1 - \beta_1^k}}{\sqrt{\frac{v_k}{1 - \beta_2^k}} + \varepsilon} \right)$
-    \STATE $ \tilde{\eta}_{k}={\eta}_{k}-X_k\frac{{X_k}^t{\eta}_{k-1}+{{\eta}^t_{k-1}}X_k}{2}$
-
-    \STATE $\overline{X}_{k+1} \leftarrow X_k - \alpha\,\eta_k$
-
-    \STATE $ X_{k+1} = \operatorname{qf}(\overline{X_{k+1}})=Q $
-
-    \STATE $k \leftarrow k+1$
-\ENDWHILE
-
-\OUTPUT $X_k$
-
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a2.png)
 Итак, как было отмечено, реализация адаптивного алгоритма RiADAM на многообразии Штифеля сталкивается с серьезными противоречиями. 
 
 Первая проблема заключается в разрушении концепции ADAM: постоянный перенос инерций ($m_k$, $v_k$) и шага ($\eta_k$) на новые касательные пространства нивелирует геометрию накопленных моментов, а поэлементное произведение теряет свой координатный смысл, из-за чего алгоритм утрачивает способность адаптивно настраивать шаг и превращается в зашумленный SGD.
@@ -442,97 +390,16 @@ $$\begin{equation}Y^{i+1} = X + \frac{\alpha}{2}W\big(X + Y^{i}\big)\Big|_{Y=R_{
 $$\begin{equation}Y^0 = X + \alpha V \tag{56} \end{equation}$$
 На практике оказывается достаточным взятие всего лишь 2 итераций.
 Таким образом, итерационный алгоритм ретракции $OpenCayley$ формально имеет вид:
-```pseudo
-\begin{algorithm}
-\caption{3.Open Cayley Transform}
-\begin{algorithmic}
-\INPUT $X \in \text{St}(m,n)$, $W \in \text{Skew}(m)$, $\alpha > 0$, $N \in \mathbb{N}$
-\STATE $Y^0 \leftarrow X + \alpha V$
-\STATE $k \leftarrow 1$
-\WHILE{$k \le N$}
-	\STATE $Y^k \leftarrow X + \frac{\alpha}{2} W(X + Y^{k-1})$
-	\STATE $k \leftarrow k + 1$
-\ENDWHILE
-\OUTPUT $Y^N$
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a3.png)
 На основе этой ретракции можно построить соответственно RiSGDM и RiADAM на $St(m,n)$, получая следующие алгоритмы:
-```pseudo
-\begin{algorithm}
-\caption{4.CayleySGDM}
-\begin{algorithmic}
-\INPUT learning rate $\alpha$, momentum coefficient $\beta$, $\epsilon=10^{-8}$, $q=0.5$, $s=2$
-\STATE Initialize $X_1$ as an orthonormal matrix, and $M_1 = 0$
-\FOR{$k = 1$ to $T$}
-	\STATE $M_{k+1} \leftarrow \beta M_k - \mathcal{G}(X_k)$ 
-	\STATE Compute the auxiliary matrix: $\hat{W}_k \leftarrow M_{k+1}X_k^\top - \frac{1}{2}X_k(X_k^\top M_{k+1}X_k^\top)$
-	\STATE $W_k \leftarrow \hat{W}_k - \hat{W}_k^\top$
-	\STATE $M_{k+1} \leftarrow W_k X_k$
-	\STATE $\alpha \leftarrow \min\{\alpha, 2q / (\|W_k\| + \epsilon)\}$ 
-	\STATE Initialize $Y^0 \leftarrow X_k + \alpha M_{k+1}$
-	\FOR{$i = 1$ to $s$}
-		\STATE $Y^i \leftarrow X_k + \frac{\alpha}{2}W_k(X_k + Y^{i-1})$
-	\ENDFOR
-	\STATE Update $X_{k+1} \leftarrow Y^s$
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
-```
-```pseudo
-\begin{algorithm}
-\caption{5.CayleyADAM}
-\begin{algorithmic}
-\INPUT learning rate $\alpha$, momentum coefficients $\beta_1$ and $\beta_2$, $\epsilon=10^{-8}$, $q=0.5$, $s=2$
-\STATE Initialize $X_1$ as an orthonormal matrix, $M_1 = 0$, $v_1 = 0$
-\FOR{$k = 1$ to $T$}
-	\STATE $M_{k+1} \leftarrow \beta_1 M_k + (1 - \beta_1)\mathcal{G}(X_k)$
-	\STATE $v_{k+1} \leftarrow \beta_2 v_k + (1 - \beta_2)\|\mathcal{G}(X_k)\|^2$
-	\STATE $\bar{v}_{k+1} \leftarrow v_{k+1} / (1 - \beta_2^k)$ 
-	\STATE r $\leftarrow (1 - \beta_1^k)\sqrt{\bar{v}_{k+1}} + \epsilon$ 
-	\STATE Compute the auxiliary matrix: $\hat{W}_k \leftarrow M_{k+1}X_k^\top - \frac{1}{2}X_k(X_k^\top M_{k+1}X_k^\top)$
-	\STATE $W_k \leftarrow (\hat{W}_k - \hat{W}_k^\top) / r$
-	\STATE $M_{k+1} \leftarrow r W_k X_k$
-	\STATE $\alpha \leftarrow \min\{\alpha, 2q / (\|W_k\| + \epsilon)\}$ 
-	\STATE Initialize $Y^0 \leftarrow X_k - \alpha M_{k+1}$
-	\FOR{$i = 1$ to $s$}
-		\STATE $Y^i \leftarrow X_k - \frac{\alpha}{2}W_k(X_k + Y^{i-1})$
-	\ENDFOR
-	\STATE Update $X_{k+1} \leftarrow Y^s$
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a4.png)
+![GD_hr](algos/a5.png)
 Как можно заметить, в алгоритмах выше проекция на касательное пространство считается иначе, чем выводилось выше. Данная запись является лишь альтернативой $Z-Z_{ort},$ ее можно получить через пересбор множителей, что делает ее полностью эквивалентной представленной выше формуле.
 Еще одно отличие заключается в том, что здесь вместо поэлементного произведения берется скаляр - норма. В реализации CayleySWATS ниже данный подход будет опущен ввиду его несоответствию первичному SWATS.
 ## 7.2. Реализация
 Сейчас мы смогли решить единственную решаемую при неизменном переносе архитектуры проблему, что дало нам экономные CayleySGDM и CayleyADAM.
 Поскольку первично SWATS содержал в себе именно эти оптимизаторы, мы можем построить общую схему CayleySWATS, взяв за основу фаз CayleySGDM и CayleyADAM с точностью до счета проекций на касательные пространства и вычисления $v$:
-```pseudo
-\begin{algorithm}
-\caption{6.CayleySWATS}
-\begin{algorithmic}
-\REQUIRE $X_0 \in St(m,n), f, \eta, \beta_{1,2}, \varepsilon_{\lambda}, c$
-\STATE $m, v, \lambda, t \leftarrow 0; \Lambda \leftarrow 0; \text{phase} \leftarrow 1; \text{count} \leftarrow 0$
-\WHILE{$X_t$ not converged}
-    \STATE $t \leftarrow t + 1; G_t \leftarrow \nabla f(X_t)$
-    \IF{$\text{phase} = 1$}
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}$
-        \STATE $m \leftarrow \beta_1 m + (1-\beta_1)\text{riGrad}_t; v \leftarrow \beta_2 v + (1-\beta_2)\|\text{riGrad}_t\|_F^2$
-        \STATE $\hat{m} \leftarrow \frac{m}{1-\beta_1^t}; \hat{v} \leftarrow \frac{v}{1-\beta_2^t}; U_t \leftarrow \frac{\hat{m}}{\sqrt{\hat{v}} + \varepsilon}$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta U_t)$
-        \IF{criterion is met}
-            \STATE $\text{phase} \leftarrow 2; \Lambda \leftarrow \hat{\lambda}_t; M \leftarrow 0$
-        \ENDIF
-    \ELSE
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}$
-        \STATE $M \leftarrow \beta_1 M + (1-\beta_1)\text{riGrad}_t$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta \Lambda M)$
-    \ENDIF
-\ENDWHILE
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a6.png)
 Все что осталось - смоделировать эффективный критерий перелючения с CayleySGDM на CayleyADAM.
 ## 7.3. Критерий переключения
 Для начала вспомним логику построения критерия для евклидового случая, оригинального SWATS:
@@ -541,133 +408,13 @@ $$\begin{equation}p^{SGD}_k=-\gamma_{k-1}\,g_k\approx p^{ADAM}_k \tag{30} \end{e
 Построим первый наивный критерий: введем скалярное произведение на матрицах как $<A,B>_E=tr(A^tEB)=tr(A^tB)$, а далее положим $\gamma_{k-1}\,\approx -\frac{<p^{ADAM}_k, p^{ADAM}_k>_E}{<p^{ADAM}_k, g_k>_E}$. Причем здесь, в отличие от оригинального SWATS, будем переключаться лишь при последовательном выполнении критерия переключения: постоянные ретракции добавляют шум, который может случайно разово направить шаг в направлении момента, что вызовет несодержательное и преждевременное выполнение критерия. Данная особенность переключения позволяет бороться с относительной зашумленностью риманова градиента, поэтому будет присутствовать во всех критериях.
 Построение же $\Lambda$ для всех четырех критериев, включая этот, также оставим неизменным, как и отсутствии начальной инерции при переходе на $SGDM: M \leftarrow 0$.
 Так, получается оптимизатор CayleySWATS-Naive:
-```pseudo
-\begin{algorithm}
-\caption{7.CayleySWATS-Naive}
-\begin{algorithmic}
-\REQUIRE $X_0 \in St(m,n), f, \eta, \beta_{1,2}, \varepsilon_{\lambda}, c$
-\STATE $m, v, \lambda, t \leftarrow 0; \Lambda \leftarrow 0; \text{phase} \leftarrow 1; \text{count} \leftarrow 0$
-\WHILE{$X_t$ not converged}
-    \STATE $t \leftarrow t + 1; G_t \leftarrow \nabla f(X_t)$
-    \IF{$\text{phase} = 1$}
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}$
-        \STATE $m \leftarrow \beta_1 m + (1-\beta_1)\text{riGrad}_t; v \leftarrow \beta_2 v + (1-\beta_2)\text{riGrad}_t \odot \text{riGrad}_t$
-        \STATE $\hat{m} \leftarrow \frac{m}{1-\beta_1^t}; \hat{v} \leftarrow \frac{v}{1-\beta_2^t}; U_t \leftarrow \frac{\hat{m}}{\sqrt{\hat{v}} + \varepsilon}$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta U_t)$
-        \STATE $\gamma_t \leftarrow \frac{\|U_t\|^2}{-\langle U_t, \text{riGrad}_t \rangle}; \lambda \leftarrow \beta_2 \lambda + (1-\beta_2)\gamma_t; \hat{\lambda}_t \leftarrow \frac{\lambda}{1-\beta_2^t}$
-        \IF{$|\hat{\lambda}_t - \gamma_t| < \varepsilon_{\lambda}$}
-            \STATE $\text{count} \leftarrow \text{count} + 1$
-        \ELSE
-            \STATE $\text{count} \leftarrow 0$
-        \ENDIF
-        \IF{$\text{count} \geq c$}
-            \STATE $\text{phase} \leftarrow 2; \Lambda \leftarrow \hat{\lambda}_t; M \leftarrow 0$
-        \ENDIF
-    \ELSE
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}$
-        \STATE $M \leftarrow \beta_1 M + (1-\beta_1)\text{riGrad}_t$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta \Lambda M)$
-    \ENDIF
-\ENDWHILE
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a7.png)
 Для построения второго критерия попытаемся применить геометрический смысл вырождения ADAM в евклидовом случае и далее сделать его экстраполяцию на нелинейные структуры: поскольку вырождение ADAM влечет небольшие, как у $SGDM$, шаги, поэтому итерации после вырождения не сильно влияют на общую накопленную инерцию, отсюда можно переключаться при небольшом отличии текущего направления от накопленного, причем благодаря скалярному произведению данное отличие можно измерять углом косинуса между текущим шагом и накопленным направлением, что, согласно идее, дает оптимизатор CayleySWATS-Angle:
-```pseudo
-\begin{algorithm}
-\caption{8.CayleySWATS-Angle}
-\begin{algorithmic}
-\REQUIRE $X_0 \in St(m,n), f, \eta, \beta_{1,2}, \varepsilon_{\theta}, c$
-\STATE $m, v, \lambda, t \leftarrow 0; \Lambda \leftarrow 0; \text{phase} \leftarrow 1; \text{count} \leftarrow 0$
-\WHILE{$X_t$ not converged}
-    \STATE $t \leftarrow t + 1; G_t \leftarrow \nabla f(X_t)$
-    \IF{$\text{phase} = 1$}
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}; m_{old} \leftarrow m$
-	\STATE $m \leftarrow \beta_1 m + (1-\beta_1)\text{riGrad}_t; v \leftarrow \beta_2 v + (1-\beta_2)\text{riGrad}_t \odot \text{riGrad}_t$
-        \STATE $\hat{m} \leftarrow \frac{m}{1-\beta_1^t}; \hat{v} \leftarrow \frac{v}{1-\beta_2^t}; U_t \leftarrow \frac{\hat{m}}{\sqrt{\hat{v}} + \varepsilon}$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta U_t)$
-        \STATE $\gamma_t \leftarrow \frac{\|U_t\|^2}{-\langle U_t, \text{riGrad}_t \rangle}; \lambda \leftarrow \beta_2 \lambda + (1-\beta_2)\gamma_t; \hat{\lambda}_t \leftarrow \frac{\lambda}{1-\beta_2^t}$
-        \STATE $\cos\theta_t \leftarrow \frac{\langle U_t, m_{old} \rangle}{\|U_t\|_F \|m_{old}\|_F}$
-        \IF{$\arccos(\cos\theta_t) < \varepsilon_{\theta}$}
-            \STATE $\text{count} \leftarrow \text{count} + 1$
-        \ELSE
-            \STATE $\text{count} \leftarrow 0$
-        \ENDIF
-        \IF{$\text{count} \geq c$}
-            \STATE $\text{phase} \leftarrow 2; \Lambda \leftarrow \hat{\lambda}_t; M \leftarrow 0$
-        \ENDIF
-    \ELSE
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}; M \leftarrow \beta_1 M + (1-\beta_1)\text{riGrad}_t$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta \Lambda M)$
-    \ENDIF
-\ENDWHILE
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a8.png)
 Альтернативно можно посмотреть на геометрию длин: при вырождении евклидовый ADAM накопил достаточную инерцию, а шаги поэтому стали небольшими, чтобы учесть данную ситуацию, которая становится постоянной после момента вырождения, можно рассматривать отношение норм шага, содержащего инерцию, и текущего риманова градиента. Безусловно, отношение может стабилизироваться несколько шагов подряд и в начале итерирования, однако данная случайность компенсируется необходимостью счетчика выполнения критерия перейти определенный порог, являющийся гиперпараметром. Поскольку в данной постановке мы рассматриваем отношение двух величин, данный критерий можно считать в определенном смысле связанным с проекций, хотя он, конечно, не содержит в себе формального проектирования, как и критерий оригинального SWATS, тем не менее использующий самую идею проекции. Так, имеем $CayleySWATS-Prokection$:
-```pseudo
-\begin{algorithm}
-\caption{9.CayleySWATS-Projection}
-\begin{algorithmic}
-\REQUIRE $X_0 \in St(m,n), f, \eta, \beta_{1,2}, \varepsilon_{r}, c$
-\STATE $m, v, \lambda, t, r \leftarrow 0; \Lambda \leftarrow 0; \text{phase} \leftarrow 1; \text{count} \leftarrow 0$
-\WHILE{$X_t$ not converged}
-    \STATE $t \leftarrow t + 1; G_t \leftarrow \nabla f(X_t)$
-    \IF{$\text{phase} = 1$}
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}$
-        \STATE $m \leftarrow \beta_1 m + (1-\beta_1)\text{riGrad}_t; v \leftarrow \beta_2 v + (1-\beta_2)\|\text{riGrad}_t\|_F^2$
-        \STATE $\hat{m} \leftarrow \frac{m}{1-\beta_1^t}; \hat{v} \leftarrow \frac{v}{1-\beta_2^t}; U_t \leftarrow \frac{\hat{m}}{\sqrt{\hat{v}} + \varepsilon}$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta U_t)$
-        \STATE $\gamma_t \leftarrow \frac{\|U_t\|^2}{-\langle U_t, \text{riGrad}_t \rangle}; \lambda \leftarrow \beta_2 \lambda + (1-\beta_2)\gamma_t; \hat{\lambda}_t \leftarrow \frac{\lambda}{1-\beta_2^t}$
-        \STATE $r_{old} \leftarrow r; r \leftarrow \frac{\|U_t\|_F}{\|\text{riGrad}_t\|_F}$
-        \IF{$|r - r_{old}| < \varepsilon_{r}$}
-            \STATE $\text{count} \leftarrow \text{count} + 1$
-        \ELSE
-            \STATE $\text{count} \leftarrow 0$
-        \ENDIF
-        \IF{$\text{count} \geq c$}
-            \STATE $\text{phase} \leftarrow 2; \Lambda \leftarrow \hat{\lambda}_t; M \leftarrow 0$
-        \ENDIF
-    \ELSE
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}; M \leftarrow \beta_1 M + (1-\beta_1)\text{riGrad}_t$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta \Lambda M)$
-    \ENDIF
-\ENDWHILE
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a9.png)
 Все три представленные критерия оперировали лишь одним условием. Может иметь смысл для более позднего переключения включить несколько условий, которые должны будут выполняться несколько шагов для переключения. Так, сейчас $\lambda$ содержит в себе информацию, которая будет использована после переключения, а риманов градиент - текущую, поскольку проекция строится именно на касательных пространствах к точкам, уже вычисленным CayleyADAM. Поскольку функции могут принимать большие значения, для удобства оценки изменения риманова градиента можно брать его относительное, а не абсолютное, изменение. Так, мы получаем два условия, которые должны выполняться одновременно и несколько итераций подряд для переключения, что дает CayleySWATS-Hybrid:
-```pseudo
-\begin{algorithm}
-\caption{10.CayleySWATS-Hybrid}
-\begin{algorithmic}
-\REQUIRE $X_0 \in St(m,n), f, \eta, \beta_{1,2}, \varepsilon_{\lambda}, \varepsilon_{\kappa}, c$
-\STATE $m, v, \lambda, t, G_{prev} \leftarrow 0; \Lambda \leftarrow 0; \text{phase} \leftarrow 1; \text{count} \leftarrow 0$
-\WHILE{$X_t$ not converged}
-    \STATE $t \leftarrow t + 1; G_t \leftarrow \nabla f(X_t)$
-    \IF{$\text{phase} = 1$}
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}$
-	\STATE $m \leftarrow \beta_1 m + (1-\beta_1)\text{riGrad}_t; v \leftarrow \beta_2 v + (1-\beta_2)\text{riGrad}_t \odot \text{riGrad}_t$
-        \STATE $\hat{m} \leftarrow \frac{m}{1-\beta_1^t}; \hat{v} \leftarrow \frac{v}{1-\beta_2^t}; U_t \leftarrow \frac{\hat{m}}{\sqrt{\hat{v}} + \varepsilon}$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta U_t)$
-        \STATE $\gamma_t \leftarrow \frac{\|U_t\|^2}{-\langle U_t, \text{riGrad}_t \rangle}; \lambda_{old} \leftarrow \lambda; \lambda \leftarrow \beta_2 \lambda + (1-\beta_2)\gamma_t; \hat{\lambda}_t \leftarrow \frac{\lambda}{1-\beta_2^t}$
-        \STATE $\kappa_t \leftarrow \frac{\|\text{riGrad}_t - G_{prev}\|_F}{\|\text{riGrad}_t\|_F}; G_{prev} \leftarrow \text{riGrad}_t$
-        \IF{$|\lambda - \lambda_{old}| < \varepsilon_{\lambda}$ \AND $\kappa_t < \varepsilon_{\kappa}$}
-            \STATE $\text{count} \leftarrow \text{count} + 1$
-        \ELSE
-            \STATE $\text{count} \leftarrow 0$
-        \ENDIF
-        \IF{$\text{count} \geq c$}
-            \STATE $\text{phase} \leftarrow 2; \Lambda \leftarrow \hat{\lambda}_t; M \leftarrow 0$
-        \ENDIF
-    \ELSE
-        \STATE $\text{riGrad}_t \leftarrow G_t - X_t \frac{X_t^T G_t + G_t^T X_t}{2}; M \leftarrow \beta_1 M + (1-\beta_1)\text{riGrad}_t$
-        \STATE $X_{t+1} \leftarrow \operatorname{OpenCayley}(X_t-\eta \Lambda M)$
-    \ENDIF
-\ENDWHILE
-\end{algorithmic}
-\end{algorithm}
-```
+![GD_hr](algos/a10.png)
 Представленные выше критерии не содержат в себе гарантированной математической идеи, хотя строго формализованы: все они строятся или эмпирически из соображений опыта, логики и экспериментов или напрямую из геометрии, причем евклидовой. В этом нет проблемы, поскольку здесь все критерии служат иллюстрациями определенных разумных идей, которые могут как сработать на определенных задачах, так и быть неверными по построению. 
 Однако куда более глубокой проблемой является сам факт адаптивности первой стадии итераций CayleySWATS - на произвольном многообразии проекции и ретракции применяются ко всей матрице, что добавляет колоссальное количество шума, лишь усиливающегося теряющими смысл преобразованиями самого оптимизатора. Так, несмотря на простоту и применимость используемой SWATS и CayleySWATS концепции warm-up(итерации конечного оптимизатора начинаются с уже достигнутой непроизвольной точки), как будет видно, данная концепция, как и другие идеи(критерии, эффективная ретракция) является неэффективной ввиду нерабочей первой стадии, непреклонно пытающейся применить адаптивность в условиях повышенного шума.
 ## 7.4 Сходимость
