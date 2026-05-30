@@ -1,4 +1,11 @@
 # Содержание
+
+$$
+\begin{equation}
+\min_{X \in \mathbb{R}^{n \times n}} || AX - B ||_F \quad \text{s.t.} \quad X^TX = E, \quad A,B \in \mathbb{R}^{n \times n}. \tag{1}
+\end{equation}
+$$
+
 0. Абстракт
 1. О работе подробнее
 2. Мотивация
